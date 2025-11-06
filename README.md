@@ -1,0 +1,2 @@
+# Design-and-implementation-of-smart-surveilence-system-for-online-interview-and-virtual-interview
+This project details the design and implementation of a Smart Surveillance System to guarantee the integrity and fairness of remote and virtual interviews. By integrating Computer Vision (CV) and Machine Learning (ML), SVIPS monitors candidates in real-time, detects potential cheating, and generates comprehensive reports for the interviewer.
