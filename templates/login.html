@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .container {
+        background: #fff;
+        padding: 40px 30px;
+        border-radius: 16px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .container:hover {
+        transform: translateY(-5px);
+    }
+
+    h1 {
+        color: #2e2e2e;
+        margin-bottom: 30px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        text-align: left;
+    }
+
+    label {
+        font-weight: 600;
+        color: #444;
+        font-size: 15px;
+    }
+
+    input {
+        padding: 12px 14px;
+        border: 2px solid #d1d1d1;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.25s ease;
+        background-color: #fafafa;
+    }
+
+    input:focus {
+        border-color: #6a11cb;
+        background-color: #fff;
+        box-shadow: 0 0 6px rgba(106, 17, 203, 0.3);
+        outline: none;
+    }
+
+    video {
+        width: 100%;
+        border-radius: 10px;
+        border: 2px solid #e5e5e5;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        background-color: #000;
+    }
+
+    button {
+        margin-top: 25px;
+        padding: 14px;
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        color: white;
+        font-size: 17px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+        background: linear-gradient(to right, #5f10b8, #1e6be9);
+        transform: scale(1.02);
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            padding: 25px 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        button {
+            font-size: 16px;
+            padding: 12px;
+        }
+    }
+</style>
+
+    <script>
+        let videoStream;
+
+        function startVideo() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    videoStream = stream;
+                    document.getElementById("video").srcObject = stream;
+                })
+                .catch(error => {
+                    console.error("Error accessing the webcam:", error);
+                    alert("Unable to access webcam.");
+                });
+        }
+
+        function captureImage() {
+            const canvas = document.createElement("canvas");
+            const video = document.getElementById("video");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL("image/jpeg");
+        }
+
+        function submitLoginForm(event) {
+            event.preventDefault();
+            const image = captureImage();
+            const formData = new FormData(event.target);
+            formData.append("image", image);
+
+            fetch("/login", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "/exam";
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error("Error during login:", error);
+                alert("An error occurred. Please try again.");
+            });
+        }
+
+        window.onload = startVideo;
+    </script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Login</h1>
+
+        <form id="login-form" onsubmit="submitLoginForm(event)">
+          
+
+            <label for="Email">Email Address:</label>
+            <input type="text" name="email" id="email" required>
+
+	    <label for="password">Password:</label>
+            <input type="password" name="password" id="password" required>
+            <video id="video" autoplay></video>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+</body>
+</html>
+

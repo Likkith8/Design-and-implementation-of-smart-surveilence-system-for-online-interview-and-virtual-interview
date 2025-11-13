@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Online Exam</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+      animation: slideDown 0.8s ease-out;
+    }
+
+    .video-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+      animation: fadeInUp 1.2s ease;
+    }
+
+    .video-container h2 {
+      margin-bottom: 20px;
+      font-size: 1.6rem;
+    }
+
+    #video-stream {
+      width: 100%;
+      border: 4px solid rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px 25px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      animation: fadeInUp 1.4s ease;
+    }
+
+    label {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 20px 0 8px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 1rem;
+      resize: vertical;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    textarea:focus {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    textarea::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    button {
+      margin-top: 25px;
+      padding: 14px;
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(to right, #28a745, #218838);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #218838, #1e7e34);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .video-container,
+      .form-container {
+        width: 95%;
+        padding: 20px;
+      }
+
+      label {
+        font-size: 1rem;
+      }
+
+      textarea {
+        font-size: 0.95rem;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Online Exam</h1>
+
+  <!-- Video Streaming -->
+  <div class="video-container">
+    <h2>Camera Feed</h2>
+    <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Live video feed" />
+  </div>
+
+<!-- Exam Form -->
+<form action="/exam" method="post" class="form-container">
+  <label for="q1">1. The ratio of the ages of A and B is 4:5. If the sum of their ages is 72 years, what is the difference in their ages?</label>
+  <textarea id="q1" name="q1" rows="2" placeholder="Type your answer here..." required></textarea>
+
+  <label for="q2">2. A car travels 60 km in 1 hour and 30 minutes. What is its average speed in km/h?</label>
+  <textarea id="q2" name="q2" rows="3" placeholder="Type your answer here..." required></textarea>
+
+  <label for="q3">3. The sum of the ages of a father and his son is 60 years. The father is 5 times as old as his son. How old are they?</label>
+  <textarea id="q3" name="q3" rows="4" placeholder="Type your answer here..." required></textarea>
+
+    <button type="submit">Submit Exam</button>
+  </form>
+
+</body>
+</html>

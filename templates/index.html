@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proctoring System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #eef2f7;
+            color: #2c3e50;
+            padding: 40px;
+            user-select: none;
+        }
+        input, textarea {
+            width: 95%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        textarea {
+            height: 250px;
+            resize: none;
+        }
+        button {
+            padding: 12px 24px;
+            background: #2980b9;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #3498db;
+        }
+        #seconds {
+            font-weight: bold;
+            color: green;
+        }
+        #warning {
+            display: none;
+            margin: 20px 0;
+            padding: 12px;
+            border-left: 6px solid #e74c3c;
+            background: #fdecea;
+            color: #e74c3c;
+            border-radius: 5px;
+        }
+        #loadingMessage, #successMessage {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            z-index: 1000;
+            text-align: center;
+        }
+        #successMessage {
+            background-color: rgba(46, 204, 113, 0.7);
+            font-size: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body onload="initializePage();">
+    <h3>Proctoring System</h3>
+    <div id="emailDiv">
+        <div>Enter your email:</div>
+        <input type="email" id="email" placeholder="your@email.com" required>
+        <button id="btnStart">Start Test</button>
+    </div>
+
+    <div class="hidden" id="testArea" style="display:none;">
+        <div>Time Spent: <span id="seconds">0</span> sec</div>
+        <div id="warning"></div>
+        <h4>Write the function to check if a number is prime.</h4>
+        <form id="test-form">
+            <label>Function Signature: <code>def is_prime(n):</code></label>
+            <textarea id="answer" oncopy="return false" oncut="return false" onpaste="return false" oncontextmenu="return false"></textarea>
+            <button type="submit">Submit Answer</button>
+        </form>
+    </div>
+
+    <!-- Loading Message -->
+    <div id="loadingMessage">Saving your data and recording, please wait...</div>
+
+    <!-- Success Message after Submission -->
+    <div id="successMessage">Your test has been submitted successfully. You will now be logged out.</div>
+
+    <script>
+        let count = 0, tabCount = 0, blurCount = 0, intervalId;
+
+        function initializePage() {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
+
+        function timer() {
+            count++;
+            $("#seconds").text(count);
+        }
+
+        function startTimer() {
+            if (!intervalId) intervalId = setInterval(timer, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+
+        function showWarn(msg) {
+            $("#warning").text(msg).show();
+            setTimeout(() => $("#warning").hide(), 5000);
+        }
+
+        // Prevent copy/paste
+        let ctrl = false;
+        $(document).keydown(e => {
+            if (e.keyCode == 17) ctrl = true;
+        }).keyup(e => {
+            if (e.keyCode == 17) ctrl = false;
+        });
+
+        $("#answer").keydown(e => {
+            if (ctrl && (e.keyCode == 67 || e.keyCode == 86)) return false;
+        });
+
+        $("#answer").on("contextmenu mousedown touchstart", e => {
+            if (e.which == 3) return false;
+        });
+
+        // Start button
+        $("#btnStart").click(() => {
+            const em = $("#email").val().trim();
+            
+            // Email Validation
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!em || !emailRegex.test(em)) {
+                alert("Please enter a valid email.");
+                return;
+            }
+
+            // Disable start controls and hide email div
+            $("#emailDiv").hide();
+
+            // Start test view
+            $("#testArea").show();
+            startTimer();
+
+            // Trigger recording after email is entered
+            $.ajax({
+                url: "/start_recording",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ email: em }),
+                success: function (res) {
+                    console.log(res.status);
+                },
+                error: function () {
+                    alert("Failed to start recording. Try reloading the page.");
+                }
+            });
+        });
+
+        // Track blur/tab
+        $(window).on("blur", () => {
+            stopTimer();
+            blurCount++;
+            showWarn("Window left!");
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                tabCount++;
+                showWarn("Tab switched!");
+            } else {
+                startTimer();
+            }
+        });
+
+        // Submit form
+        $("#test-form").submit(e => {
+            e.preventDefault();
+            const em = $("#email").val(), ans = $("#answer").val().trim();
+            stopTimer();
+
+            // Show loading message
+            $("#loadingMessage").show();
+
+            $.ajax({
+                url: "/log_final_activity",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    email: em,
+                    time_spent_seconds: count,
+                    tab_switches: tabCount,
+                    window_blurs: blurCount,
+                    final_answer: ans
+                }),
+                success: function(response) {
+                    // Hide loading message and show success message
+                    $("#loadingMessage").hide();
+                    $("#successMessage").show();
+
+                    // Disable further access
+                    $("#testArea").hide();
+                    $("#btnStart").hide();
+
+                    // Auto close browser after few seconds
+                    setTimeout(function() {
+                        window.close();
+                    }, 5000);
+                },
+                error: function() {
+                    $("#loadingMessage").hide();
+                    alert("Error logging your data.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

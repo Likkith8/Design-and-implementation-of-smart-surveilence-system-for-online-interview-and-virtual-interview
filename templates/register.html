@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register with OTP Verification</title>
+  <style>
+    /* Your provided CSS (unchanged) */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .container:hover {
+      transform: translateY(-5px);
+    }
+    h1 {
+      color: #2e2e2e;
+      margin-bottom: 30px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      text-align: left;
+    }
+    label {
+      font-weight: 600;
+      color: #444;
+      font-size: 15px;
+    }
+    input {
+      padding: 12px 14px;
+      border: 2px solid #d1d1d1;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: all 0.25s ease;
+      background-color: #fafafa;
+    }
+    input:focus {
+      border-color: #6a11cb;
+      background-color: #fff;
+      box-shadow: 0 0 6px rgba(106, 17, 203, 0.3);
+      outline: none;
+    }
+    .video-container {
+      margin-top: 25px;
+    }
+    video, canvas {
+      width: 100%;
+      border-radius: 10px;
+      border: 2px solid #e5e5e5;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      background-color: #000;
+    }
+    button {
+      margin-top: 25px;
+      padding: 14px;
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      color: white;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    button:hover {
+      background: linear-gradient(to right, #5f10b8, #1e6be9);
+      transform: scale(1.02);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Register</h1>
+    <form id="registrationForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" required>
+
+      <label for="email">Email:</label>
+      <input type="email" id="email" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" required>
+
+      <button type="button" onclick="sendOTP()">Send OTP</button>
+
+      <label for="otp">Enter OTP:</label>
+      <input type="text" id="otp" required>
+      <button type="button" onclick="verifyOTP()">Verify OTP</button>
+    </form>
+
+    <div class="video-container" style="display:none;" id="videoSection">
+      <h2>Live Camera</h2>
+      <video id="video" autoplay></video>
+      <canvas id="canvas" style="display: none;"></canvas>
+      <button id="captureButton">Capture Face</button>
+    </div>
+  </div>
+
+  <script>
+    let email = "";
+    let name = "";
+    let password = "";
+    let otpSent = false;
+
+    // Send OTP function
+    function sendOTP() {
+      email = document.getElementById('email').value;
+      name = document.getElementById('name').value;
+      password = document.getElementById('password').value;
+
+      if (!email || !name || !password) {
+        alert("Please fill in all required fields before sending OTP.");
+        return;
+      }
+
+      fetch('/send_otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          otpSent = true;
+          alert("OTP Sent. Please check your email.");
+        } else {
+          otpSent = false;
+          alert("Failed to send OTP. Please try again.");
+        }
+      })
+      .catch(err => {
+        otpSent = false;
+        console.error(err);
+        alert("An error occurred while sending OTP.");
+      });
+    }
+
+    function verifyOTP() {
+  if (!otpSent) {
+    alert("Please send OTP first!");
+    return;
+  }
+
+  const otp = document.getElementById('otp').value;
+
+  if (!otp) {
+    alert("Please enter the OTP.");
+    return;
+  }
+
+  fetch('/verify_otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp })  // Send the email and otp as JSON
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("OTP Verified. You may now capture your face.");
+      document.getElementById('videoSection').style.display = 'block';
+      startCamera();
+    } else {
+      alert("Incorrect OTP.");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("An error occurred while verifying OTP.");
+  });
+}
+
+
+    // Start Camera
+    function startCamera() {
+      const video = document.getElementById('video');
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => video.srcObject = stream)
+        .catch(err => console.error("Error accessing webcam: ", err));
+    }
+
+   document.getElementById('captureButton').addEventListener('click', () => {
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+  const video = document.getElementById('video');
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const imageData = canvas.toDataURL('image/jpeg');  // Capture image data in base64 format
+
+  fetch('/capture_face', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: imageData, name, email, password })  // Send image data and other info as JSON
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);  // Show success or error message from server
+    window.location.href = '/';  // Redirect to home or another page
+  })
+  .catch(err => console.error(err));
+});
+
+  </script>
+</body>
+</html>
